@@ -8,7 +8,8 @@ use yii\console\Controller;
 use yii\helpers\ArrayHelper;
 
 
-class CronController extends Controller {
+class CronController extends Controller
+{
 
     /**
      * @var string PHP interpriter path (if empty, path will be checked automaticly)
@@ -66,15 +67,16 @@ class CronController extends Controller {
     /**
      * Initialize empty config parameters.
      */
-    public function init() {
+    public function init()
+    {
         parent::init();
         //Checking PHP interpriter path
-        if ($this->interpreterPath === null){
+        if ($this->interpreterPath === null) {
             //nix based OS
             $this->interpreterPath = '/usr/bin/env php';
         }
         //Checking bootstrap script
-        if ($this->bootstrapScript === null){
+        if ($this->bootstrapScript === null) {
             $this->bootstrapScript = Yii::getAlias('@app/yii');
         }
     }
@@ -83,8 +85,9 @@ class CronController extends Controller {
      * Provides the command description.
      * @return string the command description.
      */
-    public function getHelp() {
-        $commandUsage = Yii::getAlias('@app/yii').' '.$this->id;
+    public function getHelp()
+    {
+        $commandUsage = Yii::getAlias('@app/yii') . ' ' . $this->id;
         return <<<RAW
 Usage: {$commandUsage} <action>
 
@@ -114,7 +117,8 @@ RAW;
      * @param array $timing
      * @return array
      */
-    protected function transformDatePieces(array $timing){
+    protected function transformDatePieces(array $timing)
+    {
         $validTimes = [];
         $dimensions = [
             'min' => ['min' => 0, 'max' => 59], //Minutes
@@ -137,8 +141,8 @@ RAW;
                         $validTimes[$type][] = $range;
                     }
                 }
-            } elseif(preg_match('/[,\d+]/', $value)) {
-                foreach(explode(',', $value) as $subval) {
+            } elseif (preg_match('/[,\d+]/', $value)) {
+                foreach (explode(',', $value) as $subval) {
                     if (is_numeric($subval) && ($subval >= $dimensions[$type]['min'] && $subval <= $dimensions[$type]['max'])) {
                         $validTimes[$type][] = $subval;
                     }
@@ -157,16 +161,17 @@ RAW;
      * @param string $stdout path to file for writing stdout
      * @param string $stderr path to file for writing stderr
      */
-    protected function runCommandBackground($command, $stdout, $stderr){
+    protected function runCommandBackground($command, $stdout, $stderr)
+    {
         $concat = ($this->updateLogFile) ? ' >>' : ' >';
         $command =
-            $this->interpreterPath.' '.
-            $command.
-            $concat . escapeshellarg($stdout).
-            ' 2>'.(($stdout === $stderr)?'&1':escapeshellarg($stderr));
+            $this->interpreterPath . ' ' .
+            $command .
+            $concat . escapeshellarg($stdout) .
+            ' 2>' . (($stdout === $stderr) ? '&1' : escapeshellarg($stderr));
 
         //nix based OS
-        system($command.' &');
+        system($command . ' &');
     }
 
     /* Overriding stdout, first calling the parent impl which will output to the screen, and then storing the string */
@@ -185,18 +190,33 @@ RAW;
      * @throws \ErrorException
      * @throws \Exception
      */
-    public function actionRun($args = []){
+    public function actionRun($args = [])
+    {
 
         //always run default values
         $tags[] = 'default';
 
         //if we have specified args in input (cron-tags) insert them in array
-        if (!empty($args)){
+        if (!empty($args)) {
             $tags[] = &$args;
-         }
+        }
+
+        $time = strtotime($this->timestamp);
+        $actions = $this->prepareActionsToRun($tags);
+
+        if (empty($actions)) {
+            Yii::info('No task on ' . date('r', $time), $this->logsCategory);
+            return;
+        }
+
+        $superAdminRunPermission = $this->getSuperAdminRunPermission();
 
         $runned = 0;
-        foreach ($this->prepareActionsToRun($tags) as $task) {
+        foreach ($actions as $task) {
+            if ($task['superAdminIntegration'] && !$superAdminRunPermission) {
+                continue;
+            }
+
             //Forming command to run
             $command = $this->bootstrapScript . ' ' . escapeshellcmd($task['command']);
 
@@ -209,7 +229,7 @@ RAW;
 
             $stdout = $this->formatFileName($stdout, $task);
             //if stdout does not exist then create the file
-            if (!file_exists($stdout)){
+            if (!file_exists($stdout)) {
                 //if stdout path does not exist then create the dir
                 $stdout_path = pathinfo($stdout, PATHINFO_DIRNAME);
                 if (!file_exists($stdout_path)) {
@@ -218,24 +238,22 @@ RAW;
                 touch($stdout);
             }
 
-            if(!is_writable($stdout)) {
+            if (!is_writable($stdout)) {
                 $stdout = '/dev/null';
             }
 
             $stderr = isset($task['stderr']) ? $this->formatFileName($task['stderr'], $task) : $stdout;
-            if(!is_writable($stderr)) {
+            if (!is_writable($stderr)) {
                 $stdout = '/dev/null';
             }
 
             $this->runCommandBackground($command, $stdout, $stderr);
-            Yii::info('Running task ['.(++$runned).']: '.$task['command'],$this->logsCategory);
+            Yii::info('Running task [' . (++$runned) . ']: ' . $task['command'], $this->logsCategory);
         }
-        $time = strtotime($this->timestamp);
-        if ($runned > 0){
-            Yii::info('Runned '.$runned.' task(s) at '.date('r', $time),$this->logsCategory);
-        }
-        else{
-            Yii::info('No task on '.date('r', $time),$this->logsCategory);
+        if ($runned > 0) {
+            Yii::info('Runned ' . $runned . ' task(s) at ' . date('r', $time), $this->logsCategory);
+        } else {
+            Yii::info('No task on ' . date('r', $time), $this->logsCategory);
         }
     }
 
@@ -244,11 +262,12 @@ RAW;
      *
      * @param array $args List of run-tags for filtering action list (if empty, show all).
      */
-    public function actionView($args = array()){
+    public function actionView($args = array())
+    {
         $tags = &$args;
 
         foreach ($this->prepareActions() as $task) {
-            if (!$tags || array_intersect($tags, $task['tags'])){
+            if (!$tags || array_intersect($tags, $task['tags'])) {
                 echo implode(' ', [
                         $task['timing']['min'],
                         $task['timing']['hour'],
@@ -258,7 +277,7 @@ RAW;
                         $task['command'],
                         '[' . $task['title'] . ']',
                         implode(', ', $task['tags']),
-                ]) . PHP_EOL;
+                    ]) . PHP_EOL;
             }
         }
     }
@@ -268,7 +287,8 @@ RAW;
      * @param string $task
      * @return string mixed
      */
-    protected function formatFileName($pattern, $task){
+    protected function formatFileName($pattern, $task)
+    {
         $pattern = str_replace(
             array('%R', '%T', '%C', '%P'),
             array(Yii::getAlias('@runtime/logs'), $task['title'], str_replace('/', '.', $task['command']), getmypid()),
@@ -280,7 +300,8 @@ RAW;
     /**
      * Help command. Show command usage.
      */
-    public function actionHelp(){
+    public function actionHelp()
+    {
         echo $this->getHelp();
     }
 
@@ -298,7 +319,7 @@ RAW;
         try {
             $cronTab = ArrayHelper::getValue(Yii::$app->params, 'cronTab');
         } catch (\ErrorException $e) {
-            throw new \ErrorException('Empty param cronTab in params array. ',8);
+            throw new \ErrorException('Empty param cronTab in params array. ', 8);
         }
         if (!empty($cronTab)) {
             foreach ($cronTab as $title => $cronJob) {
@@ -335,7 +356,7 @@ RAW;
             if (empty(array_intersect($currentTags, $task['tags']))) {
                 continue;
             }
-            foreach ($now AS $key => $value){
+            foreach ($now AS $key => $value) {
                 //Checking current datetime on timestamp piece array.
                 if (!in_array($value, $task['timing_transformed'][$key])) {
                     continue 2;
@@ -346,5 +367,15 @@ RAW;
         }
 
         return $actions;
+    }
+
+    /**
+     * Get permission from super admin api to run cron commands
+     *
+     * @return bool
+     */
+    protected function getSuperAdminRunPermission()
+    {
+        return true;
     }
 }
