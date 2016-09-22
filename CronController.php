@@ -60,6 +60,9 @@ class CronController extends Controller
             'month' => '*',
             'dayofweek' => '*',
         ],
+        'tags' => [
+            'default'
+        ],
         'superAdminIntegration' => true,
         'enabled' => true,
     ];
@@ -97,7 +100,7 @@ Actions:
     help - Show this help.
 
 Tags:
-    [tag1] [tag2] [...] [tagN] - List of tags
+    [tag1],[tag2],[...],[tagN] - List of tags
 
 Options:
     [--tagPrefix=value]
@@ -190,16 +193,10 @@ RAW;
      * @throws \ErrorException
      * @throws \Exception
      */
-    public function actionRun($args = [])
+    public function actionRun(array $args = [])
     {
 
-        //always run default values
-        $tags[] = 'default';
-
-        //if we have specified args in input (cron-tags) insert them in array
-        if (!empty($args)) {
-            $tags[] = &$args;
-        }
+        $tags = array_unique(array_merge($args, $this->defaultConfig['tags']));
 
         $time = strtotime($this->timestamp);
         $actions = $this->prepareActionsToRun($tags);
@@ -264,9 +261,9 @@ RAW;
      *
      * @param array $args List of run-tags for filtering action list (if empty, show all).
      */
-    public function actionView($args = array())
+    public function actionView(array $args = [])
     {
-        $tags = &$args;
+        $tags = array_unique(array_merge($args, $this->defaultConfig['tags']));
 
         foreach ($this->prepareActions() as $task) {
             if (!$tags || array_intersect($tags, $task['tags'])) {
@@ -331,6 +328,7 @@ RAW;
                     continue;
                 }
                 $cronJob['title'] = $title;
+                $cronJob['tags'] = array_unique(array_merge(ArrayHelper::getValue($cronJob, 'tags', []), $this->defaultConfig['tags']));
                 $cronJob['timing'] = ArrayHelper::getValue($cronJob, 'timing', $this->defaultConfig['timing']);
                 foreach (array_keys($this->defaultConfig['timing']) as $key) {
                     $cronJob['timing'][$key] = ArrayHelper::getValue($cronJob, 'timing.' . $key, $this->defaultConfig['timing'][$key]);
