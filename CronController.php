@@ -32,12 +32,12 @@ class CronController extends Controller
      * Placeholders:
      *     %R - Yii runtime path
      *     %T - cronjob title
-     *     %C - name of command
+     *     %C - cronjob command
      *     %P - pid of runner-script (current)
      *     %D(string formatted as arg of date() function) - formatted date
      * @var string mask log file name
      */
-    public $logFile = '%R/cron/%T.%D(Y-m-d).log';
+    public $logFile = '%R/cron/%C.%D(Y-m-d).log';
     /**
      * @var string Bootstrap script path (if empty, current command runner will be used)
      */
