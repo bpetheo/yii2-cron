@@ -209,7 +209,9 @@ RAW;
             return;
         }
 
-        $superAdminRunPermission = $this->getSuperAdminRunPermission();
+        // Get run permission from super admin api if there are at least one task to run AND we are in a production environment
+        // Defaults to true in dev or staging environment
+        $superAdminRunPermission = YII_ENV_PROD ? $this->getSuperAdminRunPermission() : true;
 
         $runned = 0;
         foreach ($actions as $task) {
