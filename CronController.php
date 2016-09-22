@@ -177,14 +177,6 @@ RAW;
         system($command . ' &');
     }
 
-    /* Overriding stdout, first calling the parent impl which will output to the screen, and then storing the string */
-    public function stdout($string)
-    {
-//        parent::stdout($string);
-//        $this->output = $this->output.$string."\n";
-        Yii::trace($string, 'cron');
-    }
-
     /**
      * Running actions associated with cron runner and matched with timestamp.
      *
@@ -289,8 +281,8 @@ RAW;
     protected function formatFileName($pattern, $task)
     {
         $pattern = str_replace(
-            array('%R', '%T', '%C', '%P'),
-            array(Yii::getAlias('@runtime/logs'), $task['title'], str_replace('/', '.', $task['command']), getmypid()),
+            ['%R', '%T', '%C', '%P'],
+            [Yii::getAlias('@runtime/logs'), $task['title'], str_replace('/', '.', $task['command']), getmypid()],
             $pattern
         );
         return preg_replace_callback('#%D\((.+)\)#U', create_function('$str', 'return date($str[1]);'), $pattern);
@@ -324,7 +316,7 @@ RAW;
             foreach ($cronTab as $title => $cronJob) {
                 $cronJob['enabled'] = ArrayHelper::getValue($cronJob, 'enabled', $this->defaultConfig['enabled']);
                 $cronJob['superAdminIntegration'] = ArrayHelper::getValue($cronJob, 'superAdminIntegration', $this->defaultConfig['superAdminIntegration']);
-                if (empty($title) || !isset($cronJob['command']) || !$cronJob['enabled']) {
+                if (empty($title) || !array_key_exists('command', $cronJob) || !$cronJob['enabled']) {
                     continue;
                 }
                 $cronJob['title'] = $title;
