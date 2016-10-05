@@ -224,7 +224,9 @@ RAW;
                 //if stdout path does not exist then create the dir
                 $stdout_path = pathinfo($stdout, PATHINFO_DIRNAME);
                 if (!file_exists($stdout_path)) {
+                    $old_umask = umask(0);
                     mkdir($stdout_path, '0777', true);
+                    umask($old_umask);
                 }
                 touch($stdout);
             }
