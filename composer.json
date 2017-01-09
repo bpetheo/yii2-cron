@@ -1,21 +1,16 @@
 {
-    "name": "mito/yii2-cron",
-    "description": "Executes scheduled commands defined in yii config",
-    "type": "yii2-extension",
-    "keywords": ["yii2","extension","cron", "yii2 cron", "yii2cron"],
-    "license": "BSD-3-Clause",
-    "authors": [
-        {
-            "name": "Bence Petheo",
-            "email": "b.petheo@mito.hu"
-        }
-    ],
-    "require": {
-        "yiisoft/yii2": "*"
-    },
-    "autoload": {
-        "psr-4": {
-            "mito\\yii2cron\\": ""
-        }
-    }
+	"name": "bpetheo/yii2-cron",
+	"description": "Cron implementation for yii2 framework. Executes scheduled commands defined in yii config.",
+	"type": "yii2-extension",
+	"keywords": ["yii2","extension","cron", "yii2 cron", "yii2cron"],
+	"license": "GPL-3.0",
+	"authors": [
+		{
+			"name": "Bence Petheő",
+			"email": "petheobence@gmail.com"
+		}
+	],
+	"require": {
+		"yiisoft/yii2": "*"
+	}
 }
