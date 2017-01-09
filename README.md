@@ -10,7 +10,7 @@ Cron implementation for yii2 framework. Executes scheduled commands defined in y
 ## Installation
 
 Get via composer:
-`composer require "bpetheo/yii2-cron: ~1.0.0"`
+`composer require bpetheo/yii2-cron ~1.0.0`
 
 Add to the controller map in config/console.php:
 ```
