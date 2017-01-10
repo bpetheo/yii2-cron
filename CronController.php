@@ -1,6 +1,6 @@
 <?php
 
-namespace mito\yii2cron;
+namespace bpetheo\yii2cron;
 
 use Yii;
 use yii\base\InvalidParamException;
