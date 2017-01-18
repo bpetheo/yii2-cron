@@ -6,6 +6,7 @@ use Yii;
 use yii\base\InvalidParamException;
 use yii\console\Controller;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 
 
 class CronController extends Controller
@@ -370,6 +371,48 @@ RAW;
      */
     protected function getSuperAdminRunPermission()
     {
-        return true;
+        if (!isset(Yii::$app->modules['admin']['params']['superadmin']['apiUrl'])) {
+            Yii::warning("Superadmin integration turned on but API URL is not set", 'yii2-cron');
+            return false;
+        }
+
+        if (!isset(Yii::$app->modules['admin']['params']['superadmin']['apiKey'])) {
+            Yii::warning("Superadmin integration turned on but API Key is not set", 'yii2-cron');
+            return false;
+        }
+
+        $apiUrl = Yii::$app->modules['admin']['params']['superadmin']['apiUrl'];
+        $apiKey = Yii::$app->modules['admin']['params']['superadmin']['apiKey'];
+
+        $apiEndpoint = explode('/', $apiUrl);
+        array_pop($apiEndpoint);
+        $apiEndpoint[] = 'cron';
+        $apiEndpoint[] = $apiKey;
+        $apiEndpoint = implode('/', $apiEndpoint);
+
+        try {
+            $response = file_get_contents($apiEndpoint);
+        } catch (\Exception $e) {
+            Yii::warning("Superadmin integration turned on but cannot get API response:\n$e", 'yii2-cron');
+            return false;
+        }
+
+        try {
+            $response = Json::decode($response);
+        } catch (\Exception $e) {
+            Yii::warning("Superadmin integration turned on but cannot decode API response JSON:\n$e", 'yii2-cron');
+            return false;
+        }
+
+        if (!array_key_exists('status', $response)) {
+            Yii::warning("Superadmin integration turned on but cannot find `status` key in API response JSON", 'yii2-cron');
+            return false;
+        }
+
+        if (ArrayHelper::getValue($response, 'status', null) === true) {
+            return true;
+        }
+
+        return false;
     }
 }
