@@ -376,18 +376,18 @@ RAW;
             return false;
         }
 
-        if (!isset(Yii::$app->modules['admin']['params']['superadmin']['apiKey'])) {
-            Yii::warning("Superadmin integration turned on but API Key is not set", 'yii2-cron');
+        if (!isset(Yii::$app->modules['admin']['params']['superadmin']['appToken'])) {
+            Yii::warning("Superadmin integration turned on but APP TOKEN is not set", 'yii2-cron');
             return false;
         }
 
         $apiUrl = Yii::$app->modules['admin']['params']['superadmin']['apiUrl'];
-        $apiKey = Yii::$app->modules['admin']['params']['superadmin']['apiKey'];
+        $appToken = Yii::$app->modules['admin']['params']['superadmin']['appToken'];
 
         $apiEndpoint = explode('/', $apiUrl);
         array_pop($apiEndpoint);
         $apiEndpoint[] = 'cron';
-        $apiEndpoint[] = $apiKey;
+        $apiEndpoint[] = $appToken;
         $apiEndpoint = implode('/', $apiEndpoint);
 
         try {
