@@ -319,10 +319,10 @@ RAW;
             foreach ($cronTab as $title => $cronJob) {
                 $cronJob['enabled'] = ArrayHelper::getValue($cronJob, 'enabled', $this->defaultConfig['enabled']);
                 $cronJob['superAdminIntegration'] = ArrayHelper::getValue($cronJob, 'superAdminIntegration', $this->defaultConfig['superAdminIntegration']);
-                if (empty($title) || !array_key_exists('command', $cronJob) || !$cronJob['enabled']) {
+                if (!array_key_exists('command', $cronJob) || !$cronJob['enabled']) {
                     continue;
                 }
-                $cronJob['title'] = $title;
+                $cronJob['title'] = is_numeric($title) ? "" : $title;
                 $cronJob['tags'] = array_unique(array_merge(ArrayHelper::getValue($cronJob, 'tags', []), $this->defaultConfig['tags']));
                 $cronJob['timing'] = ArrayHelper::getValue($cronJob, 'timing', $this->defaultConfig['timing']);
                 foreach (array_keys($this->defaultConfig['timing']) as $key) {
