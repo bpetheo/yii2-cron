@@ -189,7 +189,7 @@ RAW;
     public function actionRun(array $args = [])
     {
 
-        $tags = array_unique(array_merge($args, $this->defaultConfig['tags']));
+        $tags = $args ? $args : $this->defaultConfig['tags'];
 
         $time = strtotime($this->timestamp);
         $actions = $this->prepareActionsToRun($tags);
@@ -258,7 +258,7 @@ RAW;
      */
     public function actionView(array $args = [])
     {
-        $tags = array_unique(array_merge($args, $this->defaultConfig['tags']));
+        $tags = $args ? $args : $this->defaultConfig['tags'];
 
         foreach ($this->prepareActions() as $task) {
             if (!$tags || array_intersect($tags, $task['tags'])) {
