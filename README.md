@@ -71,5 +71,21 @@ You can also use a simplified format by setting only the parameters differing fr
     ],
 ```
 
+Only `command` parameter required. Also simple string format like `* * * * * controller/action` avalible.
+```
+'params' => [
+        // other parameters...
+        'cronTab' => [
+            // both cron jobs controller/action1 and controller/action2
+            // valid and runs every minute
+            [
+                'command'=>'controller/action1',
+            ],
+            '* * * * * controller/action2',
+        ],
+        // other parameters...
+    ],
+```
+
 ## Contributing
 I've made this project to fit my own needs. You might have different use cases which is not covered, but feel free to extend or modify the code to make it suitable to more people.
