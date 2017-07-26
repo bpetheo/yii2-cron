@@ -298,6 +298,42 @@ RAW;
     {
         echo $this->getHelp();
     }
+    
+    /**
+     * Convert cronJob from simple string format like 
+     * '0,30 10-20/5 * * * command/action param'
+     * to array format like
+     * [
+     *          'timing' => [
+     *              'min' => '0,30',
+     *              'hour' => '10-20/5',
+     *              'day' => '*',
+     *              'month' => '*',
+     *              'dayofweek' => '*',
+     *          ],
+     *          'command' => 'command/action param'
+     *      ]
+     * @param string $cronJobStr
+     * @return array|boolean cronJob in array format or false on fail
+     */
+    protected function convertFromSimpleFormat($cronJobStr)
+    {
+        // parse string from format "min hour day month dayofweek command"
+        if (preg_match("/^" . str_repeat('(?:([*\d\/\-,]+)\s+)', 5) . "(.+)$/", $cronJobStr, $matches)) {
+            $cronJob = [
+                'timing' => [
+                    'min' => $matches[1],
+                    'hour' => $matches[2],
+                    'day' => $matches[3],
+                    'month' => $matches[4],
+                    'dayofweek' => $matches[5],
+                ],
+                'command' => $matches[6]
+            ];
+            return $cronJob;
+        }
+        return false; 
+    }
 
     /**
      * Getting task list.
@@ -306,7 +342,6 @@ RAW;
      *
      * @throws \ErrorException
      */
-
     protected function prepareActions()
     {
         $actions = [];
@@ -317,6 +352,13 @@ RAW;
         }
         if (!empty($cronTab)) {
             foreach ($cronTab as $title => $cronJob) {
+                if (is_string($cronJob)) {
+                    $cronJob = $this->convertFromSimpleFormat($cronJob);
+                    if (!is_array($cronJob)) {
+                        // if can't convert from simple format then skip this cronJob
+                        continue;
+                    }
+                }
                 $cronJob['enabled'] = ArrayHelper::getValue($cronJob, 'enabled', $this->defaultConfig['enabled']);
                 $cronJob['superAdminIntegration'] = ArrayHelper::getValue($cronJob, 'superAdminIntegration', $this->defaultConfig['superAdminIntegration']);
                 if (!array_key_exists('command', $cronJob) || !$cronJob['enabled']) {
