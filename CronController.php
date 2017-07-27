@@ -53,7 +53,10 @@ class CronController extends Controller
      */
     public $defaultAction = 'run';
 
-    protected $defaultConfig = [
+    /**
+     * @var array default config for cron jobs
+     */
+    public $defaultConfig = [
         'timing' => [
             'min' => '*',
             'hour' => '*',
